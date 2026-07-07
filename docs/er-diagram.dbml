@@ -1,0 +1,50 @@
+Table users {
+  id string [pk]
+  name string
+  email string [unique]
+  password string
+  role string
+  createdAt datetime
+  updatedAt datetime
+}
+
+Table projects {
+  id string [pk]
+  name string
+  description string
+  createdAt datetime
+  updatedAt datetime
+}
+
+Table user_projects {
+  id string [pk]
+  userId string
+  projectId string
+  createdAt datetime
+
+  indexes {
+    (userId, projectId) [unique]
+  }
+}
+
+Table weekly_reports {
+  id string [pk]
+  userId string
+  projectId string
+  weekStartDate datetime
+  weekEndDate datetime
+  tasksCompleted text
+  tasksPlanned text
+  blockers text
+  hoursWorked int
+  notes text
+  status string
+  submittedAt datetime
+  createdAt datetime
+  updatedAt datetime
+}
+
+Ref: users.id < weekly_reports.userId
+Ref: projects.id < weekly_reports.projectId
+Ref: users.id < user_projects.userId
+Ref: projects.id < user_projects.projectId
