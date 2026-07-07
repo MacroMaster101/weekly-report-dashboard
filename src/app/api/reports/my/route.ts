@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireSession } from "@/lib/session";
+import { requireTeamMember } from "@/lib/session";
 
 export async function GET() {
   let session;
   try {
-    session = await requireSession();
+    session = await requireTeamMember();
   } catch (e) {
     return e as Response;
   }

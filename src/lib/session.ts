@@ -1,13 +1,11 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { isAdminRole, isManagerRole } from "@/lib/permissions";
+import { isManagerRole, isTeamMemberRole } from "@/lib/permissions";
 
 export async function getSession() {
   return getServerSession(authOptions);
 }
 
-// Throws the actual Response instead of a plain Error so route handlers can
-// `return e as Response` directly from their catch block (see any api/ route).
 export async function requireSession() {
   const session = await getSession();
   if (!session?.user) {
@@ -24,11 +22,17 @@ export async function requireManager() {
   return session;
 }
 
-// Stricter than requireManager: only ADMIN, not MANAGER, may approve/reject
-// pending Manager/Admin signups.
 export async function requireAdmin() {
   const session = await requireSession();
-  if (!isAdminRole(session.user.role)) {
+  if (session.user.role !== "ADMIN") {
+    throw new Response(JSON.stringify({ error: "Forbidden" }), { status: 403 });
+  }
+  return session;
+}
+
+export async function requireTeamMember() {
+  const session = await requireSession();
+  if (!isTeamMemberRole(session.user.role)) {
     throw new Response(JSON.stringify({ error: "Forbidden" }), { status: 403 });
   }
   return session;

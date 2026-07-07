@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { reportSchema } from "@/lib/validations";
-import { requireSession, requireManager } from "@/lib/session";
+import { requireManager, requireTeamMember } from "@/lib/session";
 
 export async function GET() {
   try {
@@ -10,6 +10,7 @@ export async function GET() {
     return e as Response;
   }
   const reports = await prisma.weeklyReport.findMany({
+    where: { user: { role: "TEAM_MEMBER" } },
     orderBy: { weekStartDate: "desc" },
     include: { user: { select: { name: true } }, project: { select: { name: true } } },
   });
@@ -19,7 +20,7 @@ export async function GET() {
 export async function POST(req: Request) {
   let session;
   try {
-    session = await requireSession();
+    session = await requireTeamMember();
   } catch (e) {
     return e as Response;
   }
@@ -37,9 +38,9 @@ export async function POST(req: Request) {
       weekEndDate: new Date(d.weekEndDate),
       tasksCompleted: d.tasksCompleted,
       tasksPlanned: d.tasksPlanned,
-      blockers: d.blockers,
-      hoursWorked: d.hoursWorked,
-      notes: d.notes,
+      blockers: d.blockers ?? null,
+      hoursWorked: d.hoursWorked ?? null,
+      notes: d.notes ?? null,
     },
   });
   return NextResponse.json({ report }, { status: 201 });

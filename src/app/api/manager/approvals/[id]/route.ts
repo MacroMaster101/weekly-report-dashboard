@@ -3,6 +3,11 @@ import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/session";
 
 const DECISIONS = ["APPROVED", "REJECTED"] as const;
+type Decision = (typeof DECISIONS)[number];
+
+function isDecision(value: unknown): value is Decision {
+  return typeof value === "string" && DECISIONS.includes(value as Decision);
+}
 
 // Admin-only: approve or reject a pending Manager/Admin signup request.
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -12,9 +17,9 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     return e as Response;
   }
   const { id } = await params;
-  const body = await req.json().catch(() => null);
+  const body = (await req.json().catch(() => null)) as { decision?: unknown } | null;
   const decision = body?.decision;
-  if (!DECISIONS.includes(decision)) {
+  if (!isDecision(decision)) {
     return NextResponse.json({ error: "decision must be APPROVED or REJECTED" }, { status: 400 });
   }
 

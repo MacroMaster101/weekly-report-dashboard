@@ -2,7 +2,6 @@
 import { useState } from "react";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import type { TooltipContentProps } from "recharts";
-import type { ValueType, NameType } from "recharts/types/component/DefaultTooltipContent";
 import type { ProjectDistributionPoint } from "@/types/dashboard";
 import { useChartColors } from "@/components/charts/useChartColors";
 
@@ -14,14 +13,14 @@ function EmptyChart() {
   );
 }
 
-const CustomTooltip = ({ active, payload }: TooltipContentProps<ValueType, NameType>) => {
+const CustomTooltip = ({ active, payload }: TooltipContentProps) => {
   if (active && payload && payload.length) {
-    const data = payload[0].payload as ProjectDistributionPoint;
+    const data = payload[0].payload as ProjectDistributionPoint & { fill?: string };
     return (
       <div className="rounded-2xl border border-border bg-surface/90 p-3.5 shadow-md backdrop-blur-md">
         <p className="mb-1 text-xs font-black text-fg">{data.project}</p>
         <div className="flex items-center gap-2 text-xs font-bold">
-          <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: payload[0].payload.fill || payload[0].fill }} />
+          <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: data.fill || payload[0].fill }} />
           <span className="text-muted">Reports:</span>
           <span className="font-mono text-accent font-black">{data.count}</span>
         </div>
@@ -80,4 +79,3 @@ export function ProjectDistributionChart({ data }: { data: ProjectDistributionPo
     </ResponsiveContainer>
   );
 }
-

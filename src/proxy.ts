@@ -12,11 +12,10 @@ export default withAuth(
     if (pathname.startsWith("/manager") && !isManager) {
       return NextResponse.redirect(new URL("/unauthorized", req.url));
     }
-    // Approving Manager/Admin signups is Admin-only, stricter than the rest of /manager.
     if (pathname.startsWith("/manager/approvals") && role !== "ADMIN") {
       return NextResponse.redirect(new URL("/unauthorized", req.url));
     }
-    if (pathname.startsWith("/member") && role !== "TEAM_MEMBER" && !isManager) {
+    if (pathname.startsWith("/member") && role !== "TEAM_MEMBER") {
       return NextResponse.redirect(new URL("/unauthorized", req.url));
     }
     return NextResponse.next();

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { reportSchema } from "@/lib/validations";
-import { requireSession } from "@/lib/session";
+import { requireSession, requireTeamMember } from "@/lib/session";
 import { isManagerRole } from "@/lib/permissions";
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -26,7 +26,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   let session;
   try {
-    session = await requireSession();
+    session = await requireTeamMember();
   } catch (e) {
     return e as Response;
   }
@@ -36,8 +36,6 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   if (existing.userId !== session.user.id) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
-  // Reports are immutable once SUBMITTED/LATE — this preserves an accurate audit
-  // trail for managers instead of letting history be rewritten after the fact.
   if (existing.status !== "DRAFT") {
     return NextResponse.json({ error: "Submitted reports cannot be edited" }, { status: 409 });
   }
@@ -55,9 +53,9 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       weekEndDate: new Date(d.weekEndDate),
       tasksCompleted: d.tasksCompleted,
       tasksPlanned: d.tasksPlanned,
-      blockers: d.blockers,
-      hoursWorked: d.hoursWorked,
-      notes: d.notes,
+      blockers: d.blockers ?? null,
+      hoursWorked: d.hoursWorked ?? null,
+      notes: d.notes ?? null,
     },
   });
   return NextResponse.json({ report });
@@ -66,7 +64,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   let session;
   try {
-    session = await requireSession();
+    session = await requireTeamMember();
   } catch (e) {
     return e as Response;
   }

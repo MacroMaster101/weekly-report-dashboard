@@ -38,7 +38,7 @@ A full-stack web application built with **Next.js 16** and **Prisma** that enabl
     *   *Custom tooltips*: Recharts graphics utilize premium glassmorphic tooltips to show hover details.
     *   *Timeline*: A real-time timeline feed showing recent logs, status updates, and user credentials.
 *   **📁 Project Management (CRUD)** — Full project list management (create, view, update, delete) accessible to managers.
-*   **🤖 AI Chat Assistant (Good-to-Have)** — A floating conversational chat window showing a scrollable message thread, automatic scroll anchoring, typing indicators, and natural language Q&A about team activity (e.g. *"What did the team work on this week?"*) powered by Groq (Llama 3.3).
+*   **🤖 AI Chat Assistant (Good-to-Have)** — A floating conversational chat window showing a scrollable message thread, automatic scroll anchoring, typing indicators, and natural language Q&A about team activity (e.g. *"What did the team work on this week?"*) powered by Groq (Llama 3.3), with a built-in local summary fallback when no API key is configured.
 
 ---
 
@@ -77,7 +77,7 @@ src/
   lib/                                # Helper utilities (prisma Client, validations schema, auth)
 prisma/
   schema.prisma                       # Database schema definition
-  seed.ts                             # Mock database seeder script
+  seed.ts                             # Deterministic demo seeder with users, projects, assignments, reports
 ```
 
 ---
@@ -99,7 +99,8 @@ Fill in the values in your `.env` file:
 *   `DATABASE_URL`: Your Neon Postgres serverless connection string.
 *   `NEXTAUTH_SECRET`: A random security string to sign session tokens.
 *   `NEXTAUTH_URL`: Set to `http://localhost:3000` for local development.
-*   `GROQ_API_KEY`: *(Optional)* Your API key from Groq Console to enable the chatbot widget.
+*   `GROQ_API_KEY`: *(Optional)* Your API key from Groq Console to enable LLM-powered answers. Without it, the chatbot uses a built-in local summary fallback.
+*   `ALLOW_PUBLIC_ELEVATED_SIGNUP`: Keep `false` for normal use so Manager/Admin signups require Admin approval. Set `true` only for controlled demos where elevated signups should be auto-approved.
 
 ### 💾 3. Set Up the Database
 Deploy database schemas and generate the Prisma Client bindings:
@@ -109,10 +110,11 @@ npx prisma generate
 ```
 
 ### 🌱 4. Seed Demo Data
-Populate the database with sample users, projects, and weekly logs:
+Reset and populate the demo database with realistic users, projects, project assignments, and weekly logs:
 ```bash
 npm run db:seed
 ```
+The seed creates 19 users, 24 projects, 48 project assignments, and 96 weekly reports. It resets the demo tables first, so rerunning it gives a clean consistent dataset.
 
 ### ⚡ 5. Start the Development Server
 Launch the local Next.js development server:
@@ -130,20 +132,20 @@ Open your browser and navigate to **[http://localhost:3000](http://localhost:300
     *   `DATABASE_URL` — the same Neon connection string (Neon is already serverless-friendly, no changes needed).
     *   `NEXTAUTH_SECRET` — the same generated secret, or a freshly generated one for production.
     *   `NEXTAUTH_URL` — **must be your production URL**, e.g. `https://your-app.vercel.app` (not `localhost`). If you're not sure of the final domain yet, deploy once, copy the assigned `*.vercel.app` URL, then set this variable and redeploy.
-    *   `GROQ_API_KEY` — *(optional)* the same Groq key, to keep the AI assistant working in production.
+    *   `GROQ_API_KEY` — *(optional)* the same Groq key for LLM-powered answers. Without it, the AI assistant still uses the local summary fallback.
 3.  **Database migrations** — the schema is already applied to the live Neon database, so no extra migration step is required at deploy time. If you change `schema.prisma` later, run `npx prisma migrate deploy` against the same `DATABASE_URL` before redeploying.
 4.  **Redeploy** after adding env vars (Vercel doesn't pick up new variables on an already-running deployment).
 
 ---
 
 ## 👥 Demo Credentials
-All seeded test accounts use the password `password123` and are pre-approved, bypassing the signup approval flow described below.
+All seeded demo accounts use the password `Password123` and are pre-approved, bypassing the signup approval flow described below.
 
 | Email | Role | Access Level |
 | --- | --- | --- |
-| `member@test.com` | `TEAM_MEMBER` | Create, edit drafts, and submit weekly reports. |
-| `manager@test.com` | `MANAGER` | View all reports, filter logs, manage projects, and use AI assistant. |
-| `admin@test.com` | `ADMIN` | Full application administration, including approving new Manager/Admin signups. |
+| `member@weekly.local` | `TEAM_MEMBER` | Create, edit drafts, and submit weekly reports. |
+| `manager@weekly.local` | `MANAGER` | View all reports, filter logs, manage projects, and use AI assistant. |
+| `admin@weekly.local` | `ADMIN` | Full application administration, including approving new Manager/Admin signups. |
 
 ### Role assignment & approval flow
 Anyone can register as a `TEAM_MEMBER` and use the app immediately. Registering as `MANAGER` or `ADMIN` instead creates the account in a `PENDING` state — sign-in is blocked with a clear message until an existing Admin visits **Manager Hub → Approvals** (`/manager/approvals`, Admin-only) and approves or rejects the request.

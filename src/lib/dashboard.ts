@@ -12,6 +12,7 @@ export async function computeDashboard(): Promise<DashboardData> {
       select: { id: true, name: true },
     }),
     prisma.weeklyReport.findMany({
+      where: { user: { role: "TEAM_MEMBER" } },
       include: { user: { select: { name: true } }, project: { select: { name: true } } },
       orderBy: { weekStartDate: "desc" },
     }),

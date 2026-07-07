@@ -1,7 +1,6 @@
 "use client";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, CartesianGrid, ResponsiveContainer } from "recharts";
 import type { TooltipContentProps } from "recharts";
-import type { ValueType, NameType } from "recharts/types/component/DefaultTooltipContent";
 import type { SubmissionStatusPoint } from "@/types/dashboard";
 import { useChartColors } from "@/components/charts/useChartColors";
 
@@ -13,14 +12,14 @@ function EmptyChart() {
   );
 }
 
-const CustomTooltip = ({ active, payload, label }: TooltipContentProps<ValueType, NameType>) => {
+const CustomTooltip = ({ active, payload, label }: TooltipContentProps) => {
   if (active && payload && payload.length) {
     return (
       <div className="rounded-2xl border border-border bg-surface/90 p-3.5 shadow-md backdrop-blur-md min-w-[140px]">
         <p className="mb-2 text-[10px] font-black uppercase tracking-wider text-muted">{label}</p>
         <div className="flex flex-col gap-1.5">
           {payload.map((pld) => (
-            <div key={pld.name} className="flex items-center justify-between gap-4 text-xs font-bold">
+            <div key={pld.name ?? "status"} className="flex items-center justify-between gap-4 text-xs font-bold">
               <div className="flex items-center gap-2 text-fg">
                 <span className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ backgroundColor: pld.fill }} />
                 <span className="capitalize">{pld.name}</span>
@@ -53,4 +52,3 @@ export function SubmissionStatusChart({ data }: { data: SubmissionStatusPoint[] 
     </ResponsiveContainer>
   );
 }
-

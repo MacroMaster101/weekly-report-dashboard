@@ -1,8 +1,13 @@
 import { z } from "zod";
 
+const optionalText = z.preprocess(
+  (value) => (typeof value === "string" && value.trim() === "" ? undefined : value),
+  z.string().trim().optional(),
+);
+
 export const registerSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  email: z.string().email("Valid email required"),
+  name: z.string().trim().min(1, "Name is required"),
+  email: z.string().trim().email("Valid email required"),
   password: z
     .string()
     .min(8, "Password must be at least 8 characters")
@@ -13,31 +18,30 @@ export const registerSchema = z.object({
 });
 
 export const loginSchema = z.object({
-  email: z.string().email(),
+  email: z.string().trim().email(),
   password: z.string().min(1),
 });
 
 export const reportSchema = z.object({
-  projectId: z.string().min(1, "Project is required"),
-  weekStartDate: z.string().min(1, "Week start date is required"),
-  weekEndDate: z.string().min(1, "Week end date is required"),
-  tasksCompleted: z.string().min(1, "Tasks completed is required"),
-  tasksPlanned: z.string().min(1, "Tasks planned is required"),
-  blockers: z.string().optional(),
+  projectId: z.string().trim().min(1, "Project is required"),
+  weekStartDate: z.string().trim().min(1, "Week start date is required"),
+  weekEndDate: z.string().trim().min(1, "Week end date is required"),
+  tasksCompleted: z.string().trim().min(1, "Tasks completed is required"),
+  tasksPlanned: z.string().trim().min(1, "Tasks planned is required"),
+  blockers: optionalText,
   hoursWorked: z.preprocess(
     (value) => (value === "" || value === null ? undefined : value),
     z.coerce.number().int().min(0).optional(),
   ),
-  notes: z.string().optional(),
+  notes: optionalText,
 }).refine((data) => new Date(data.weekStartDate) <= new Date(data.weekEndDate), {
-  // Cross-field check must live in .refine (top-level z.object fields can't see each other).
   path: ["weekEndDate"],
   message: "Week end date must be after the start date",
 });
 
 export const projectSchema = z.object({
-  name: z.string().min(1, "Project name is required"),
-  description: z.string().optional(),
+  name: z.string().trim().min(1, "Project name is required"),
+  description: optionalText,
 });
 
 export type RegisterInput = z.infer<typeof registerSchema>;

@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireSession } from "@/lib/session";
+import { requireTeamMember } from "@/lib/session";
 import { isLate } from "@/lib/utils";
 
 export async function POST(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   let session;
   try {
-    session = await requireSession();
+    session = await requireTeamMember();
   } catch (e) {
     return e as Response;
   }
@@ -19,8 +19,6 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
   if (existing.status !== "DRAFT") {
     return NextResponse.json({ error: "Report already submitted" }, { status: 409 });
   }
-  // Submitting after the report week has ended marks it LATE instead of SUBMITTED;
-  // once set, status moves out of DRAFT so the report becomes read-only (see [id]/route.ts).
   const now = new Date();
   const late = isLate(now, existing.weekEndDate);
   const report = await prisma.weeklyReport.update({

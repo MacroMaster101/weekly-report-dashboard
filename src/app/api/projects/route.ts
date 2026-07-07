@@ -3,51 +3,50 @@ import { prisma } from "@/lib/prisma";
 import { projectSchema } from "@/lib/validations";
 import { requireSession, requireManager } from "@/lib/session";
 
+function mapProject(project: {
+  id: string;
+  name: string;
+  description: string | null;
+  _count: { reports: number; members: number };
+}) {
+  return {
+    id: project.id,
+    name: project.name,
+    description: project.description,
+    reportsCount: project._count.reports,
+    membersCount: project._count.members,
+  };
+}
+
 export async function GET() {
   try {
     await requireSession();
   } catch (e) {
     return e as Response;
   }
-  const projects = await prisma.project.findMany({
+
+  const rawProjects = await prisma.project.findMany({
     orderBy: { name: "asc" },
-    include: {
-      reports: {
-        select: {
-          userId: true,
-        },
-      },
+    select: {
+      id: true,
+      name: true,
+      description: true,
+      _count: { select: { reports: true, members: true } },
     },
   });
-
-  const formattedProjects = projects.map((p) => {
-    const uniqueUserIds = new Set(p.reports.map((r) => r.userId));
-    return {
-      id: p.id,
-      name: p.name,
-      description: p.description,
-      reportsCount: p.reports.length,
-      membersCount: uniqueUserIds.size,
-    };
+  const projects = rawProjects.map(mapProject);
+  const assignedMemberIds = await prisma.userProject.findMany({
+    distinct: ["userId"],
+    select: { userId: true },
   });
+  const stats = {
+    totalProjects: projects.length,
+    activeProjects: projects.filter((project) => project.reportsCount > 0).length,
+    totalReports: projects.reduce((total, project) => total + project.reportsCount, 0),
+    totalMembers: assignedMemberIds.length,
+  };
 
-  const totalProjects = formattedProjects.length;
-  const activeProjects = formattedProjects.filter((p) => p.reportsCount > 0).length;
-  const totalReports = formattedProjects.reduce((acc, p) => acc + p.reportsCount, 0);
-
-  const allUniqueUsers = new Set<string>();
-  projects.forEach((p) => p.reports.forEach((r) => allUniqueUsers.add(r.userId)));
-  const totalMembers = allUniqueUsers.size;
-
-  return NextResponse.json({
-    projects: formattedProjects,
-    stats: {
-      totalProjects,
-      activeProjects,
-      totalReports,
-      totalMembers,
-    },
-  });
+  return NextResponse.json({ projects, stats });
 }
 
 export async function POST(req: Request) {
@@ -61,6 +60,23 @@ export async function POST(req: Request) {
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.flatten().fieldErrors }, { status: 400 });
   }
-  const project = await prisma.project.create({ data: parsed.data });
-  return NextResponse.json({ project }, { status: 201 });
+
+  const existing = await prisma.project.findFirst({
+    where: { name: { equals: parsed.data.name, mode: "insensitive" } },
+    select: { id: true },
+  });
+  if (existing) {
+    return NextResponse.json({ error: "Project name already exists" }, { status: 409 });
+  }
+
+  const project = await prisma.project.create({
+    data: { ...parsed.data, description: parsed.data.description ?? null },
+    select: {
+      id: true,
+      name: true,
+      description: true,
+      _count: { select: { reports: true, members: true } },
+    },
+  });
+  return NextResponse.json({ project: mapProject(project) }, { status: 201 });
 }

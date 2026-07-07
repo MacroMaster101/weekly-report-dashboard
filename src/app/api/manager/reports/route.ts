@@ -5,6 +5,15 @@ import type { Prisma } from "@prisma/client";
 
 const REPORT_STATUSES = ["DRAFT", "SUBMITTED", "LATE"] as const;
 
+function parseDateParam(value: string, field: string): Date | NextResponse | null {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return NextResponse.json({ error: `Invalid ${field}` }, { status: 400 });
+  }
+  return date;
+}
+
 export async function GET(req: Request) {
   try {
     await requireManager();
@@ -12,7 +21,7 @@ export async function GET(req: Request) {
     return e as Response;
   }
   const { searchParams } = new URL(req.url);
-  const where: Prisma.WeeklyReportWhereInput = {};
+  const where: Prisma.WeeklyReportWhereInput = { user: { role: "TEAM_MEMBER" } };
   const userId = searchParams.get("userId");
   const projectId = searchParams.get("projectId");
   const status = searchParams.get("status");
@@ -27,10 +36,21 @@ export async function GET(req: Request) {
     }
     where.status = status as (typeof REPORT_STATUSES)[number];
   }
-  if (startDate || endDate) {
+
+  const parsedStart = startDate ? parseDateParam(startDate, "startDate") : null;
+  if (parsedStart instanceof NextResponse) return parsedStart;
+  const parsedEnd = endDate ? parseDateParam(endDate, "endDate") : null;
+  if (parsedEnd instanceof NextResponse) return parsedEnd;
+
+  if (parsedStart || parsedEnd) {
+    const endOfDay = parsedEnd ? new Date(parsedEnd) : null;
+    if (endOfDay) endOfDay.setHours(23, 59, 59, 999);
+    if (parsedStart && endOfDay && parsedStart > endOfDay) {
+      return NextResponse.json({ error: "startDate must be before endDate" }, { status: 400 });
+    }
     where.weekStartDate = {};
-    if (startDate) where.weekStartDate.gte = new Date(startDate);
-    if (endDate) where.weekStartDate.lte = new Date(endDate);
+    if (parsedStart) where.weekStartDate.gte = parsedStart;
+    if (endOfDay) where.weekStartDate.lte = endOfDay;
   }
 
   const reports = await prisma.weeklyReport.findMany({
