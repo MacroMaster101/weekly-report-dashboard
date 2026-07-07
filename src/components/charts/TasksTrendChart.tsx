@@ -1,8 +1,15 @@
 "use client";
+
+import { useSyncExternalStore } from "react";
 import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from "recharts";
 import type { TooltipContentProps } from "recharts";
 import type { TasksTrendPoint } from "@/types/dashboard";
 import { useChartColors } from "@/components/charts/useChartColors";
+
+// Recharts' ResponsiveContainer measures the DOM, so render it only after
+// hydration to avoid an SSR mismatch. useSyncExternalStore returns false on the
+// server and true on the client without a render-triggering effect.
+const useHydrated = () => useSyncExternalStore(() => () => {}, () => true, () => false);
 
 function EmptyChart() {
   return (
@@ -32,6 +39,16 @@ const CustomTooltip = ({ active, payload, label }: TooltipContentProps) => {
 
 export function TasksTrendChart({ data }: { data: TasksTrendPoint[] }) {
   const c = useChartColors();
+  const mounted = useHydrated();
+
+  if (!mounted) {
+    return (
+      <div className="h-60 flex items-center justify-center text-xs font-semibold text-muted/60">
+        Loading chart...
+      </div>
+    );
+  }
+
   if (data.length === 0) return <EmptyChart />;
   return (
     <ResponsiveContainer width="100%" height={240}>

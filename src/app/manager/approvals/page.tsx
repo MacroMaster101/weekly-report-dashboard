@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 import { Check, X } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -14,8 +15,11 @@ type PendingUser = {
 };
 
 export default function ApprovalsPage() {
+  const { data: session } = useSession();
   const [pending, setPending] = useState<PendingUser[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const isAdmin = session?.user?.role === "ADMIN";
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState("");
 
@@ -53,7 +57,9 @@ export default function ApprovalsPage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
-        <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted">Manager</p>
+        <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted">
+          {isAdmin ? "Admin" : "Manager"}
+        </p>
         <h1 className="text-3xl font-black tracking-tight text-fg">Pending Approvals</h1>
         <p className="text-sm font-medium text-muted max-w-2xl">
           Manager and Admin signups are held here until an admin approves them. Team Member accounts are active immediately and never appear on this list.

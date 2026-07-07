@@ -1,15 +1,15 @@
-"use client";
-
 import { X } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 type Props = {
   open: boolean;
   onClose: () => void;
   title?: string;
   children: React.ReactNode;
+  className?: string;
 };
 
-export function Modal({ open, onClose, title, children }: Props) {
+export function Modal({ open, onClose, title, children, className }: Props) {
   if (!open) return null;
   return (
     <div
@@ -19,7 +19,10 @@ export function Modal({ open, onClose, title, children }: Props) {
       <div
         role="dialog"
         aria-modal="true"
-        className="animate-[modal-in_0.3s_cubic-bezier(0.16,1,0.3,1)] max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-border-strong/45 bg-surface/95 p-6 shadow-[var(--shadow-lg)] backdrop-blur-xl"
+        className={cn(
+          "animate-[modal-in_0.3s_cubic-bezier(0.16,1,0.3,1)] max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-border-strong/45 bg-surface/95 p-6 shadow-[var(--shadow-lg)] backdrop-blur-xl",
+          className
+        )}
         onClick={(e) => e.stopPropagation()}
       >
         {title && (

@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
+import { useSession } from "next-auth/react";
 import { Plus, Trash2, Search, LayoutGrid, List, FolderKanban, Activity, FileText, Users } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -11,7 +12,9 @@ import { ProjectGrid } from "@/components/projects/ProjectGrid";
 type Project = ProjectRow;
 
 export default function ProjectsPage() {
+  const { data: session } = useSession();
   const [projects, setProjects] = useState<Project[]>([]);
+  const isAdmin = session?.user?.role === "ADMIN";
   const [stats, setStats] = useState({
     totalProjects: 0,
     activeProjects: 0,
@@ -74,7 +77,9 @@ export default function ProjectsPage() {
       {/* Page Title & Add Button */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex flex-col gap-1">
-          <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted">Manager</p>
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted">
+            {isAdmin ? "Admin" : "Manager"}
+          </p>
           <h1 className="text-3xl font-black tracking-tight text-fg">Projects</h1>
         </div>
         <Button onClick={() => { setEditing(undefined); setOpen(true); }} className="shadow-lg">

@@ -17,11 +17,6 @@ export const registerSchema = z.object({
   role: z.enum(["TEAM_MEMBER", "MANAGER", "ADMIN"]).default("TEAM_MEMBER"),
 });
 
-export const loginSchema = z.object({
-  email: z.string().trim().email(),
-  password: z.string().min(1),
-});
-
 export const reportSchema = z.object({
   projectId: z.string().trim().min(1, "Project is required"),
   weekStartDate: z.string().trim().min(1, "Week start date is required"),
@@ -44,7 +39,3 @@ export const projectSchema = z.object({
   description: optionalText,
 });
 
-export type RegisterInput = z.infer<typeof registerSchema>;
-export type LoginInput = z.infer<typeof loginSchema>;
-export type ReportInput = z.infer<typeof reportSchema>;
-export type ProjectInput = z.infer<typeof projectSchema>;

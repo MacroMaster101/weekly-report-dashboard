@@ -39,14 +39,18 @@ export function ProjectGrid({
             className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-border/80 bg-surface/40 p-5 shadow-sm backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:border-accent/40 hover:bg-surface/65 hover:shadow-md"
           >
             {/* Top glowing glow background effect */}
-            <div className="absolute -right-16 -top-16 h-36 w-36 rounded-full bg-accent/5 opacity-0 blur-2xl transition-opacity duration-300 group-hover:opacity-100" />
+            <div className="absolute -right-16 -top-16 h-36 w-36 rounded-full bg-accent/5 opacity-0 blur-2xl transition-opacity duration-300 group-hover:opacity-100 pointer-events-none" />
 
             <div className="flex flex-col gap-3">
               {/* Header: Icon & Action shortcuts */}
               <div className="flex items-center justify-between">
-                <span className={`flex h-10 w-10 items-center justify-center rounded-xl border ${colorStyle}`}>
+                <button
+                  onClick={() => onEdit(p)}
+                  className={`flex h-10 w-10 items-center justify-center rounded-xl border transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer ${colorStyle}`}
+                  title="Edit project"
+                >
                   <FolderKanban size={18} strokeWidth={2.2} />
-                </span>
+                </button>
                 
                 {/* Micro Actions Menu */}
                 <div className="flex gap-1.5 opacity-60 transition-opacity duration-200 group-hover:opacity-100">

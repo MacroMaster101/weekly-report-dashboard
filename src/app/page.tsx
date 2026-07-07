@@ -113,7 +113,7 @@ export default async function Home() {
           <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-accent/5 to-transparent rounded-bl-3xl pointer-events-none" />
           <div className="flex items-center justify-between border-b border-border/50 pb-4.5">
             <div>
-              <p className="text-sm font-black tracking-tight text-fg">Manager Overview</p>
+              <p className="text-sm font-black tracking-tight text-fg">Management Overview</p>
               <p className="text-[10px] font-bold text-muted uppercase tracking-wider mt-0.5">Current Reporting Period</p>
             </div>
             <span className="rounded-full bg-accent-soft px-3 py-1 text-[10px] font-black tracking-wider text-accent border border-accent/20 animate-pulse">LIVE</span>

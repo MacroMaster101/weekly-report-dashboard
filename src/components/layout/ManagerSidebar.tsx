@@ -24,7 +24,7 @@ export function ManagerSidebar() {
   return (
     <nav className="w-full shrink-0 border-b border-border/50 bg-surface/50 p-2 backdrop-blur-md md:w-64 md:border-b-0 md:border-r md:p-4">
       <p className="hidden px-3 pb-3 pt-1 text-[10px] font-black uppercase tracking-[0.2em] text-faint md:block">
-        Manager Hub
+        {isAdmin ? "Admin Hub" : "Manager Hub"}
       </p>
       <ul className="flex gap-1 overflow-x-auto md:flex-col md:overflow-visible">
         {visibleLinks.map(({ href, label, Icon }) => {

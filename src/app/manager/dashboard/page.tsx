@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 import { Card } from "@/components/ui/Card";
 import { SummaryCards } from "@/components/dashboard/SummaryCards";
 import { RecentActivity } from "@/components/dashboard/RecentActivity";
@@ -9,7 +10,11 @@ import { ProjectDistributionChart } from "@/components/charts/ProjectDistributio
 import type { DashboardData } from "@/types/dashboard";
 
 export default function DashboardPage() {
+  const { data: session } = useSession();
   const [data, setData] = useState<DashboardData | null>(null);
+
+  const isAdmin = session?.user?.role === "ADMIN";
+
   useEffect(() => {
     fetch("/api/manager/dashboard").then((r) => r.json()).then(setData);
   }, []);
@@ -23,7 +28,9 @@ export default function DashboardPage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
-        <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted">Manager</p>
+        <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted">
+          {isAdmin ? "Admin" : "Manager"}
+        </p>
         <h1 className="text-3xl font-black tracking-tight text-fg">Dashboard</h1>
       </div>
       <SummaryCards summary={data.summary} />

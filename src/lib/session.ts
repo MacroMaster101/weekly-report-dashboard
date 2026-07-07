@@ -2,7 +2,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { isManagerRole, isTeamMemberRole } from "@/lib/permissions";
 
-export async function getSession() {
+async function getSession() {
   return getServerSession(authOptions);
 }
 

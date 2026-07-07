@@ -36,9 +36,13 @@ export function ProjectTable({
             <tr key={p.id} className="align-middle text-fg transition-all duration-200 hover:bg-surface-2/30">
               <td className="truncate px-6 py-4 text-sm font-black text-fg">
                 <div className="flex items-center gap-2.5">
-                  <span className="flex h-7 w-7 items-center justify-center rounded-lg border border-indigo-500/15 text-indigo-400 bg-indigo-500/10">
+                  <button
+                    onClick={() => onEdit(p)}
+                    className="flex h-7 w-7 items-center justify-center rounded-lg border border-indigo-500/15 text-indigo-400 bg-indigo-500/10 transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer shadow-sm"
+                    title="Edit project"
+                  >
                     <FolderKanban size={14} strokeWidth={2.2} />
-                  </span>
+                  </button>
                   <span className="truncate">{p.name}</span>
                 </div>
               </td>

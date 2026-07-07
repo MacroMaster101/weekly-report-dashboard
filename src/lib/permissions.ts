@@ -7,8 +7,3 @@ export function isManagerRole(role: string): boolean {
 export function isTeamMemberRole(role: string): boolean {
   return role === "TEAM_MEMBER";
 }
-
-// Only Admins (not Managers) can approve/reject pending Manager/Admin signups.
-export function isAdminRole(role: string): boolean {
-  return role === "ADMIN";
-}
