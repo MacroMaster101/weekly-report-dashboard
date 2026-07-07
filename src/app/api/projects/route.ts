@@ -11,9 +11,43 @@ export async function GET() {
   }
   const projects = await prisma.project.findMany({
     orderBy: { name: "asc" },
-    select: { id: true, name: true, description: true },
+    include: {
+      reports: {
+        select: {
+          userId: true,
+        },
+      },
+    },
   });
-  return NextResponse.json({ projects });
+
+  const formattedProjects = projects.map((p) => {
+    const uniqueUserIds = new Set(p.reports.map((r) => r.userId));
+    return {
+      id: p.id,
+      name: p.name,
+      description: p.description,
+      reportsCount: p.reports.length,
+      membersCount: uniqueUserIds.size,
+    };
+  });
+
+  const totalProjects = formattedProjects.length;
+  const activeProjects = formattedProjects.filter((p) => p.reportsCount > 0).length;
+  const totalReports = formattedProjects.reduce((acc, p) => acc + p.reportsCount, 0);
+
+  const allUniqueUsers = new Set<string>();
+  projects.forEach((p) => p.reports.forEach((r) => allUniqueUsers.add(r.userId)));
+  const totalMembers = allUniqueUsers.size;
+
+  return NextResponse.json({
+    projects: formattedProjects,
+    stats: {
+      totalProjects,
+      activeProjects,
+      totalReports,
+      totalMembers,
+    },
+  });
 }
 
 export async function POST(req: Request) {

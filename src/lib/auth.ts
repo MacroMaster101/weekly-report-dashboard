@@ -20,6 +20,14 @@ export const authOptions: NextAuthOptions = {
         if (!user) return null;
         const ok = await bcrypt.compare(credentials.password, user.password);
         if (!ok) return null;
+        // Manager/Admin signups are held for admin approval — block sign-in
+        // until approved so an unapproved account can't be used at all.
+        if (user.approvalStatus === "PENDING") {
+          throw new Error("PendingApproval");
+        }
+        if (user.approvalStatus === "REJECTED") {
+          throw new Error("AccessRejected");
+        }
         return { id: user.id, name: user.name, email: user.email, role: user.role };
       },
     }),

@@ -29,6 +29,7 @@ A full-stack web application built with **Next.js 16** and **Prisma** that enabl
     *   *Password Eye Icon*: Interactive toggle button to hide or reveal password input values.
     *   *Real-time Password Complexity Checker*: Interactive checklist showing length, lowercase, uppercase, and digit rules dynamically as you type.
     *   *Instant Inline Validation*: Form fields validate instantly on keypress and automatically clear validation errors if inputs are corrected or emptied.
+    *   *Admin-Gated Elevated Roles*: Team Member signups are active immediately; Manager/Admin signups are held as `PENDING` and cannot log in until an existing Admin approves the request from the **Pending Approvals** screen.
 *   **📋 Fixed Weekly Report Structure** — Enforces a uniform report format (Week Date range, Project, Tasks Completed, Tasks Planned, Blocker tags, Hours Worked, and Notes) to keep reporting consistent and comparable across the team.
 *   **⏳ Draft & Submission Lifecycle** — Supports saving progress as a draft for continuous editing. Once submitted, reports are permanently locked to preserve record integrity.
 *   **📊 Manager Dashboard & Visual Insights**:
@@ -136,13 +137,16 @@ Open your browser and navigate to **[http://localhost:3000](http://localhost:300
 ---
 
 ## 👥 Demo Credentials
-All seeded test accounts use the password `password123`.
+All seeded test accounts use the password `password123` and are pre-approved, bypassing the signup approval flow described below.
 
 | Email | Role | Access Level |
 | --- | --- | --- |
 | `member@test.com` | `TEAM_MEMBER` | Create, edit drafts, and submit weekly reports. |
 | `manager@test.com` | `MANAGER` | View all reports, filter logs, manage projects, and use AI assistant. |
-| `admin@test.com` | `ADMIN` | Full application administration. |
+| `admin@test.com` | `ADMIN` | Full application administration, including approving new Manager/Admin signups. |
+
+### Role assignment & approval flow
+Anyone can register as a `TEAM_MEMBER` and use the app immediately. Registering as `MANAGER` or `ADMIN` instead creates the account in a `PENDING` state — sign-in is blocked with a clear message until an existing Admin visits **Manager Hub → Approvals** (`/manager/approvals`, Admin-only) and approves or rejects the request.
 
 ---
 
@@ -160,6 +164,8 @@ All seeded test accounts use the password `password123`.
 | `GET /api/manager/reports` | Manager | Fetch filterable list of all submissions. |
 | `POST /api/projects` | Manager | Creates a new project category. |
 | `POST /api/ai/chat` | Manager | Natural language assistant responder. |
+| `GET /api/manager/approvals` | Admin | Lists pending Manager/Admin signup requests. |
+| `PATCH /api/manager/approvals/[id]` | Admin | Approves or rejects a pending signup request. |
 
 ---
 

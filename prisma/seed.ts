@@ -9,10 +9,12 @@ const prisma = new PrismaClient({ adapter });
 async function main() {
   const password = await bcrypt.hash("password123", 10);
 
+  // Demo accounts are pre-approved so they're usable immediately, bypassing
+  // the Manager/Admin signup approval flow that applies to real registrations.
   const [manager, member, admin] = await Promise.all([
-    prisma.user.upsert({ where: { email: "manager@test.com" }, update: {}, create: { name: "Manager User", email: "manager@test.com", password, role: "MANAGER" } }),
-    prisma.user.upsert({ where: { email: "member@test.com" }, update: {}, create: { name: "Member User", email: "member@test.com", password, role: "TEAM_MEMBER" } }),
-    prisma.user.upsert({ where: { email: "admin@test.com" }, update: {}, create: { name: "Admin User", email: "admin@test.com", password, role: "ADMIN" } }),
+    prisma.user.upsert({ where: { email: "manager@test.com" }, update: {}, create: { name: "Manager User", email: "manager@test.com", password, role: "MANAGER", approvalStatus: "APPROVED" } }),
+    prisma.user.upsert({ where: { email: "member@test.com" }, update: {}, create: { name: "Member User", email: "member@test.com", password, role: "TEAM_MEMBER", approvalStatus: "APPROVED" } }),
+    prisma.user.upsert({ where: { email: "admin@test.com" }, update: {}, create: { name: "Admin User", email: "admin@test.com", password, role: "ADMIN", approvalStatus: "APPROVED" } }),
   ]);
 
   const projectNames = ["Client A", "Internal Tooling", "R&D", "Marketing"];

@@ -20,7 +20,13 @@ export function LoginForm() {
     const res = await signIn("credentials", { email, password, redirect: false });
     setLoading(false);
     if (res?.error) {
-      setError("Invalid email or password");
+      if (res.error === "PendingApproval") {
+        setError("Your account is awaiting admin approval before you can sign in.");
+      } else if (res.error === "AccessRejected") {
+        setError("Your account request was not approved. Contact an admin for details.");
+      } else {
+        setError("Invalid email or password");
+      }
       return;
     }
     const sessionRes = await fetch("/api/auth/session");

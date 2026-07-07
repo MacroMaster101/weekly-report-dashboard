@@ -18,16 +18,25 @@ enum ReportStatus {
   LATE
 }
 
+// Team Member signups are auto-approved; Manager/Admin signups start PENDING
+// and can't log in until an existing Admin approves them (see auth.ts authorize()).
+enum ApprovalStatus {
+  APPROVED
+  PENDING
+  REJECTED
+}
+
 model User {
-  id        String   @id @default(cuid())
-  name      String
-  email     String   @unique
-  password  String
-  role      Role     @default(TEAM_MEMBER)
-  reports   WeeklyReport[]
-  projects  UserProject[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id               String         @id @default(cuid())
+  name             String
+  email            String         @unique
+  password         String
+  role             Role           @default(TEAM_MEMBER)
+  approvalStatus   ApprovalStatus @default(APPROVED)
+  reports          WeeklyReport[]
+  projects         UserProject[]
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
 }
 
 model Project {

@@ -1,6 +1,6 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { isManagerRole } from "@/lib/permissions";
+import { isAdminRole, isManagerRole } from "@/lib/permissions";
 
 export async function getSession() {
   return getServerSession(authOptions);
@@ -19,6 +19,16 @@ export async function requireSession() {
 export async function requireManager() {
   const session = await requireSession();
   if (!isManagerRole(session.user.role)) {
+    throw new Response(JSON.stringify({ error: "Forbidden" }), { status: 403 });
+  }
+  return session;
+}
+
+// Stricter than requireManager: only ADMIN, not MANAGER, may approve/reject
+// pending Manager/Admin signups.
+export async function requireAdmin() {
+  const session = await requireSession();
+  if (!isAdminRole(session.user.role)) {
     throw new Response(JSON.stringify({ error: "Forbidden" }), { status: 403 });
   }
   return session;

@@ -19,10 +19,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Email already in use" }, { status: 409 });
   }
 
+  // Team Member accounts are usable immediately; Manager/Admin requests need
+  // an existing Admin to approve them first (see /manager/approvals + auth.ts).
+  const approvalStatus = role === "TEAM_MEMBER" ? "APPROVED" : "PENDING";
+
   const hashed = await bcrypt.hash(password, 10);
   const user = await prisma.user.create({
-    data: { name, email, password: hashed, role },
-    select: { id: true, name: true, email: true, role: true },
+    data: { name, email, password: hashed, role, approvalStatus },
+    select: { id: true, name: true, email: true, role: true, approvalStatus: true },
   });
   return NextResponse.json({ user }, { status: 201 });
 }

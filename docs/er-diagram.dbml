@@ -4,6 +4,7 @@ Table users {
   email string [unique]
   password string
   role string
+  approvalStatus string [note: 'APPROVED | PENDING | REJECTED — Manager/Admin signups start PENDING and require an Admin decision; Team Member signups are auto-APPROVED']
   createdAt datetime
   updatedAt datetime
 }

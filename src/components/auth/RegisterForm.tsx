@@ -29,6 +29,7 @@ export function RegisterForm() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [generalError, setGeneralError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [pendingNotice, setPendingNotice] = useState(false);
 
   // Real-time inline validation as the user types
   const handleInputChange = (field: string, value: string) => {
@@ -109,7 +110,27 @@ export function RegisterForm() {
       }
       return;
     }
+    if (form.role !== "TEAM_MEMBER") {
+      // Manager/Admin accounts need approval before they can sign in — hold
+      // on this page instead of redirecting straight to a login that will fail.
+      setPendingNotice(true);
+      return;
+    }
     router.push("/login");
+  }
+
+  if (pendingNotice) {
+    return (
+      <div className="flex flex-col gap-4 rounded-xl border border-[var(--status-pending-fg)]/30 bg-[var(--status-pending-bg)] p-5 text-sm">
+        <p className="font-bold text-[var(--status-pending-fg)]">Account request submitted</p>
+        <p className="text-[var(--status-pending-fg)]/90 leading-relaxed">
+          Your account has been created but needs approval from an existing admin before you can sign in, since you requested elevated access. You&apos;ll be able to log in once an admin approves the request.
+        </p>
+        <Button variant="secondary" onClick={() => router.push("/login")} className="w-fit">
+          Back to login
+        </Button>
+      </div>
+    );
   }
 
   // Evaluate password rules live for visual checklist
