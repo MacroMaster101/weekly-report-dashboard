@@ -11,7 +11,7 @@ export async function GET() {
   }
   const reports = await prisma.weeklyReport.findMany({
     // Drafts are private to their author; managers only see submitted work.
-    where: { user: { role: "TEAM_MEMBER" }, status: { in: ["SUBMITTED", "LATE"] } },
+    where: { user: { role: "TEAM_MEMBER", approvalStatus: "APPROVED" }, status: { in: ["SUBMITTED", "LATE"] } },
     orderBy: { weekStartDate: "desc" },
     include: { user: { select: { name: true } }, project: { select: { name: true } } },
   });

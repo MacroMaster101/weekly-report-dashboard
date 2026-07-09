@@ -17,15 +17,20 @@ export async function GET() {
     return e as Response;
   }
 
-  // Admins see every account (they manage roles); managers only see the
-  // team members whose reports they review.
+  // Admins see every active approved account (they manage roles); managers
+  // only see approved team members whose reports they review. Pending and
+  // rejected signups belong on the Approvals screens, not the active Team list.
   const members = await prisma.user.findMany({
-    where: session.user.role === "ADMIN" ? undefined : { role: "TEAM_MEMBER" },
+    where: session.user.role === "ADMIN"
+      ? { approvalStatus: "APPROVED" }
+      : { role: "TEAM_MEMBER", approvalStatus: "APPROVED" },
     orderBy: { name: "asc" },
     select: {
       id: true,
       name: true,
+      email: true,
       role: true,
+      approvalStatus: true,
       projects: {
         select: {
           projectId: true,

@@ -30,7 +30,7 @@ async function getHomeStats(): Promise<HomeStats> {
       prisma.project.count({ where: { reports: { some: {} } } }),
       prisma.weeklyReport.groupBy({
         by: ["projectId"],
-        where: { user: { role: "TEAM_MEMBER" } },
+        where: { user: { role: "TEAM_MEMBER", approvalStatus: "APPROVED" } },
         _sum: { hoursWorked: true },
         _count: { _all: true },
         orderBy: { _sum: { hoursWorked: "desc" } },

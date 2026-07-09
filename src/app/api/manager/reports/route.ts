@@ -30,7 +30,7 @@ export async function GET(req: Request) {
     return e as Response;
   }
   const { searchParams } = new URL(req.url);
-  const where: Prisma.WeeklyReportWhereInput = { user: { role: "TEAM_MEMBER" } };
+  const where: Prisma.WeeklyReportWhereInput = { user: { role: "TEAM_MEMBER", approvalStatus: "APPROVED" } };
   const userId = searchParams.get("userId");
   const projectId = searchParams.get("projectId");
   const status = searchParams.get("status");

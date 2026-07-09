@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
-import { Search, FolderCog } from "lucide-react";
+import { FolderCog, Search, Trash2 } from "lucide-react";
 
 type Role = "TEAM_MEMBER" | "MANAGER" | "ADMIN";
 type RoleFilter = "" | Role;
@@ -15,6 +15,7 @@ type MemberProject = { projectId: string; project: { id: string; name: string } 
 type Member = {
   id: string;
   name: string;
+  email: string;
   role: Role;
   projects?: MemberProject[];
 };
@@ -43,6 +44,7 @@ export default function TeamPage() {
   const [assigning, setAssigning] = useState<Member | null>(null);
   const [assignedIds, setAssignedIds] = useState<Set<string>>(new Set());
   const [savingAssign, setSavingAssign] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const isAdmin = session?.user?.role === "ADMIN";
 
@@ -99,6 +101,33 @@ export default function TeamPage() {
     });
   }
 
+  async function deleteUser(member: Member) {
+    if (member.id === session?.user?.id) {
+      alert("You cannot delete your own account.");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Delete ${member.name}? This also removes their reports and project assignments.`,
+    );
+    if (!confirmed) return;
+
+    setDeletingId(member.id);
+    try {
+      const res = await fetch(`/api/manager/members/${member.id}`, { method: "DELETE" });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        alert(errData.error || "Failed to delete user");
+        return;
+      }
+      setMembers((current) => current.filter((m) => m.id !== member.id));
+      setReports((current) => current.filter((report) => report.userId !== member.id));
+    } catch {
+      alert("An error occurred while deleting the user");
+    } finally {
+      setDeletingId(null);
+    }
+  }
   async function saveAssignments() {
     if (!assigning) return;
     setSavingAssign(true);
@@ -188,7 +217,7 @@ export default function TeamPage() {
 
       <Card className="p-0 border border-border/80 bg-surface/40 backdrop-blur-md">
         <div className="overflow-x-auto rounded-2xl">
-          <table className="min-w-[800px] w-full table-fixed text-left text-xs font-semibold leading-normal">
+          <table className="min-w-[900px] w-full table-fixed text-left text-xs font-semibold leading-normal">
             <thead>
               <tr className="border-b border-border bg-surface-2/65 text-muted uppercase tracking-wider text-[10px] font-black">
                 <th className="w-56 px-6 py-4">Name</th>
@@ -196,6 +225,7 @@ export default function TeamPage() {
                 <th className="px-6 py-4">Assigned Projects</th>
                 <th className="w-28 px-6 py-4 text-center">Reports</th>
                 <th className="w-36 px-6 py-4">Latest status</th>
+                {isAdmin && <th className="w-24 px-6 py-4 text-center">Actions</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-border/60">
@@ -204,7 +234,12 @@ export default function TeamPage() {
                 const adminRoleLocked = m.role === "ADMIN";
                 return (
                   <tr key={m.id} className="align-middle text-fg transition-all duration-200 hover:bg-surface-2/30">
-                    <td className="truncate px-6 py-4 font-black text-fg text-sm">{m.name}</td>
+                    <td className="px-6 py-4">
+                      <div className="flex min-w-0 flex-col">
+                        <span className="truncate font-black text-fg text-sm">{m.name}</span>
+                        <span className="truncate text-[11px] font-semibold text-faint">{m.email}</span>
+                      </div>
+                    </td>
                     <td className="px-6 py-4">
                       {isAdmin ? (
                         <select
@@ -251,12 +286,25 @@ export default function TeamPage() {
                     <td className="px-6 py-4">
                       {s.latest ? <Badge status={s.latest} /> : <span className="text-faint">-</span>}
                     </td>
+                    {isAdmin && (
+                      <td className="px-6 py-4 text-center">
+                        <button
+                          type="button"
+                          onClick={() => deleteUser(m)}
+                          disabled={deletingId === m.id || m.id === session?.user?.id}
+                          title={m.id === session?.user?.id ? "You cannot delete your own account" : "Delete user"}
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-surface-2/45 text-muted transition-all duration-200 hover:border-[var(--status-late-fg)]/45 hover:text-[var(--status-late-fg)] disabled:cursor-not-allowed disabled:opacity-40"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </td>
+                    )}
                   </tr>
                 );
               })}
               {filteredMembers.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="py-12 text-center text-muted font-bold text-sm">
+                  <td colSpan={isAdmin ? 6 : 5} className="py-12 text-center text-muted font-bold text-sm">
                     No members match your search or filter criteria.
                   </td>
                 </tr>

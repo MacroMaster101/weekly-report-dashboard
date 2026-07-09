@@ -7,21 +7,21 @@ export async function computeDashboard(): Promise<DashboardData> {
 
   const [members, allReports, thisWeekReports] = await Promise.all([
     prisma.user.findMany({
-      where: { role: "TEAM_MEMBER" },
+      where: { role: "TEAM_MEMBER", approvalStatus: "APPROVED" },
       orderBy: { name: "asc" },
       select: { id: true, name: true },
     }),
     // Drafts are private to their author: manager analytics only count
     // submitted work. Members without a submission show up as "pending".
     prisma.weeklyReport.findMany({
-      where: { user: { role: "TEAM_MEMBER" }, status: { in: ["SUBMITTED", "LATE"] } },
+      where: { user: { role: "TEAM_MEMBER", approvalStatus: "APPROVED" }, status: { in: ["SUBMITTED", "LATE"] } },
       include: { user: { select: { name: true } }, project: { select: { name: true } } },
       orderBy: { weekStartDate: "desc" },
     }),
     prisma.weeklyReport.findMany({
       where: {
         weekStartDate: { gte: start, lte: end },
-        user: { role: "TEAM_MEMBER" },
+        user: { role: "TEAM_MEMBER", approvalStatus: "APPROVED" },
         status: { in: ["SUBMITTED", "LATE"] },
       },
       include: { user: { select: { id: true, name: true } } },

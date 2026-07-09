@@ -186,14 +186,14 @@ export async function POST(req: Request) {
 
   const [members, reports] = await Promise.all([
     prisma.user.findMany({
-      where: { role: "TEAM_MEMBER" },
+      where: { role: "TEAM_MEMBER", approvalStatus: "APPROVED" },
       orderBy: { name: "asc" },
       select: { id: true, name: true },
     }),
     prisma.weeklyReport.findMany({
       // Drafts are private to their author — never fed to the assistant
       // (or to the external LLM API) until submitted.
-      where: { user: { role: "TEAM_MEMBER" }, status: { in: ["SUBMITTED", "LATE"] } },
+      where: { user: { role: "TEAM_MEMBER", approvalStatus: "APPROVED" }, status: { in: ["SUBMITTED", "LATE"] } },
       orderBy: [{ weekStartDate: "desc" }, { updatedAt: "desc" }],
       take: 100,
       include: { user: { select: { id: true, name: true } }, project: { select: { name: true } } },
