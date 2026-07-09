@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { getWeekRange } from "@/lib/utils";
+import { getWeekRange, formatLocalDate } from "@/lib/utils";
 import type { DashboardData } from "@/types/dashboard";
 
 export async function computeDashboard(): Promise<DashboardData> {
@@ -11,13 +11,19 @@ export async function computeDashboard(): Promise<DashboardData> {
       orderBy: { name: "asc" },
       select: { id: true, name: true },
     }),
+    // Drafts are private to their author: manager analytics only count
+    // submitted work. Members without a submission show up as "pending".
     prisma.weeklyReport.findMany({
-      where: { user: { role: "TEAM_MEMBER" } },
+      where: { user: { role: "TEAM_MEMBER" }, status: { in: ["SUBMITTED", "LATE"] } },
       include: { user: { select: { name: true } }, project: { select: { name: true } } },
       orderBy: { weekStartDate: "desc" },
     }),
     prisma.weeklyReport.findMany({
-      where: { weekStartDate: { gte: start, lte: end }, user: { role: "TEAM_MEMBER" } },
+      where: {
+        weekStartDate: { gte: start, lte: end },
+        user: { role: "TEAM_MEMBER" },
+        status: { in: ["SUBMITTED", "LATE"] },
+      },
       include: { user: { select: { id: true, name: true } } },
     }),
   ]);
@@ -40,7 +46,7 @@ export async function computeDashboard(): Promise<DashboardData> {
 
   const trendMap = new Map<string, number>();
   for (const r of allReports) {
-    const key = new Date(r.weekStartDate).toISOString().slice(0, 10);
+    const key = formatLocalDate(new Date(r.weekStartDate));
     trendMap.set(key, (trendMap.get(key) ?? 0) + 1);
   }
   const tasksTrend = [...trendMap.entries()]

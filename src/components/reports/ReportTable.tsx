@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/Badge";
-import { Eye } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 
 export type ReportTableRow = {
   id: string;
@@ -12,7 +12,8 @@ export type ReportTableRow = {
   blockers: string | null;
   hoursWorked: number | null;
   notes: string | null;
-  status: "DRAFT" | "SUBMITTED" | "LATE";
+  // "PENDING" is a manager-facing redacted draft: metadata only, no content.
+  status: "PENDING" | "SUBMITTED" | "LATE";
   submittedAt: string | null;
 };
 
@@ -40,11 +41,15 @@ export function ReportTable({
           </tr>
         </thead>
         <tbody className="divide-y divide-border/60">
-          {reports.map((r) => (
+          {reports.map((r) => {
+            // Pending rows are metadata-only: content is redacted server-side
+            // and there is no detail view until the report is submitted.
+            const isPending = r.status === "PENDING";
+            return (
             <tr
               key={r.id}
-              onClick={() => onSelectReport(r)}
-              className="align-top text-fg transition-all duration-200 hover:bg-surface-2/30 cursor-pointer"
+              onClick={isPending ? undefined : () => onSelectReport(r)}
+              className={`align-top text-fg transition-all duration-200 ${isPending ? "opacity-80" : "hover:bg-surface-2/30 cursor-pointer"}`}
             >
               <td className="truncate px-6 py-4 text-sm font-black text-fg">{r.user.name}</td>
               <td className="truncate px-6 py-4">
@@ -55,8 +60,8 @@ export function ReportTable({
               <td className="whitespace-nowrap px-6 py-4 font-mono text-[11px] text-muted">
                 {new Date(r.weekStartDate).toLocaleDateString()} - {new Date(r.weekEndDate).toLocaleDateString()}
               </td>
-              <td className="px-6 py-4 text-muted text-xs leading-relaxed max-w-xs truncate" title={r.tasksCompleted}>
-                {r.tasksCompleted}
+              <td className="px-6 py-4 text-muted text-xs leading-relaxed max-w-xs truncate" title={isPending ? undefined : r.tasksCompleted}>
+                {isPending ? <span className="italic text-faint">Not submitted yet</span> : r.tasksCompleted}
               </td>
               <td className="px-6 py-4 text-muted text-xs leading-relaxed max-w-xs truncate" title={r.blockers || undefined}>
                 {r.blockers ? (
@@ -76,19 +81,29 @@ export function ReportTable({
                 {r.submittedAt ? new Date(r.submittedAt).toLocaleDateString() : "-"}
               </td>
               <td className="px-6 py-3.5 text-center">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onSelectReport(r);
-                  }}
-                  className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-surface-2/45 text-muted hover:border-accent/45 hover:text-accent transition-all duration-200 cursor-pointer"
-                  title="View report details"
-                >
-                  <Eye size={14} />
-                </button>
+                {isPending ? (
+                  <span
+                    className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border/40 text-faint"
+                    title="Pending — details available after submission"
+                  >
+                    <EyeOff size={14} />
+                  </span>
+                ) : (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onSelectReport(r);
+                    }}
+                    className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-surface-2/45 text-muted hover:border-accent/45 hover:text-accent transition-all duration-200 cursor-pointer"
+                    title="View report details"
+                  >
+                    <Eye size={14} />
+                  </button>
+                )}
               </td>
             </tr>
-          ))}
+            );
+          })}
         </tbody>
       </table>
     </div>

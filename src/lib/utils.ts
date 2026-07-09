@@ -15,6 +15,18 @@ export function getWeekRange(date: Date): { start: Date; end: Date } {
   return { start, end };
 }
 
+/**
+ * Format a date as local YYYY-MM-DD. Never use toISOString() for this: it
+ * converts to UTC, which shifts local-midnight dates back a day in timezones
+ * ahead of UTC (a Monday week start would render as Sunday).
+ */
+export function formatLocalDate(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
 export function isLate(submittedAt: Date | null, weekEndDate: Date): boolean {
   if (!submittedAt) return false;
   const deadline = new Date(weekEndDate);

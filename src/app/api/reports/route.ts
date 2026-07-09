@@ -10,7 +10,8 @@ export async function GET() {
     return e as Response;
   }
   const reports = await prisma.weeklyReport.findMany({
-    where: { user: { role: "TEAM_MEMBER" } },
+    // Drafts are private to their author; managers only see submitted work.
+    where: { user: { role: "TEAM_MEMBER" }, status: { in: ["SUBMITTED", "LATE"] } },
     orderBy: { weekStartDate: "desc" },
     include: { user: { select: { name: true } }, project: { select: { name: true } } },
   });

@@ -1,5 +1,8 @@
 import { z } from "zod";
 
+// Shared Zod schemas — used by the API routes for request validation and by
+// the client forms for instant inline feedback, so both sides always agree.
+
 const optionalText = z.preprocess(
   (value) => (typeof value === "string" && value.trim() === "" ? undefined : value),
   z.string().trim().optional(),

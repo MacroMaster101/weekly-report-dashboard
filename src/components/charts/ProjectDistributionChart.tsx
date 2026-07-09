@@ -50,15 +50,10 @@ export function ProjectDistributionChart({ data }: { data: ProjectDistributionPo
 
   if (data.length === 0) return <EmptyChart />;
 
-  // Sort and group projects to keep layout clean and legible.
-  const sortedData = [...data].sort((a, b) => b.count - a.count);
-  const limit = 6;
-  let chartData = sortedData;
-  if (sortedData.length > limit) {
-    const top = sortedData.slice(0, limit);
-    const othersCount = sortedData.slice(limit).reduce((acc, curr) => acc + curr.count, 0);
-    chartData = [...top, { project: "Others", count: othersCount }];
-  }
+  // Show the top projects individually. Aggregating the tail into an "Others"
+  // bar dwarfed the real bars (18 small projects summed to ~14x the largest),
+  // making the distribution unreadable.
+  const chartData = [...data].sort((a, b) => b.count - a.count).slice(0, 8);
 
   const colors = [
     c.c1 || "var(--chart-1)",

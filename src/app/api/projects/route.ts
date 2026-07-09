@@ -19,6 +19,8 @@ function mapProject(project: {
 }
 
 export async function GET() {
+  // Any authenticated user may list projects (not just managers): team
+  // members need the list to tag their weekly reports.
   try {
     await requireSession();
   } catch (e) {

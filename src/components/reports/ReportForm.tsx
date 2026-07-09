@@ -41,6 +41,8 @@ export function ReportForm({ initial, projects }: { initial?: Initial; projects:
     setForm((current) => ({ ...current, [key]: value }));
   }
 
+  // Both buttons persist the report first (create or update); "Submit Report"
+  // then calls the submit endpoint, which locks the report permanently.
   async function save(submitAfter: boolean) {
     setLoading(true);
     setError("");

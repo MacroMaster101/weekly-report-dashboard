@@ -17,8 +17,15 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     include: { user: { select: { name: true } }, project: { select: { name: true } } },
   });
   if (!report) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  if (report.userId !== session.user.id && !isManagerRole(session.user.role)) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (report.userId !== session.user.id) {
+    if (!isManagerRole(session.user.role)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+    // Drafts are private to their author until submitted; return 404 so
+    // managers cannot infer draft contents or existence.
+    if (report.status === "DRAFT") {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
   }
   return NextResponse.json({ report });
 }

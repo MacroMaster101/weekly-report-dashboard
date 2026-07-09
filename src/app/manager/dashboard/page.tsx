@@ -36,7 +36,7 @@ export default function DashboardPage() {
       <SummaryCards summary={data.summary} />
       <div className="grid gap-4 xl:grid-cols-2">
         <Card className="p-6">
-          <h2 className="mb-4 text-sm font-bold text-fg">Tasks / Reports Trend</h2>
+          <h2 className="mb-4 text-sm font-bold text-fg">Reports Submitted per Week</h2>
           <TasksTrendChart data={data.tasksTrend} />
         </Card>
         <Card className="p-6">

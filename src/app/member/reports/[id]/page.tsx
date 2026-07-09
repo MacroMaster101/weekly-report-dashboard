@@ -4,6 +4,7 @@ import { useParams } from "next/navigation";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { ReportForm } from "@/components/reports/ReportForm";
+import { formatLocalDate } from "@/lib/utils";
 
 type Project = { id: string; name: string };
 type ReportStatus = "DRAFT" | "SUBMITTED" | "LATE";
@@ -21,8 +22,10 @@ type ReportDetail = {
   project: { name: string };
 };
 
+// Local time, not UTC — a UTC conversion would shift the date back a day in
+// timezones ahead of UTC and drift the week on save.
 function toDateInput(date: string) {
-  return new Date(date).toISOString().slice(0, 10);
+  return formatLocalDate(new Date(date));
 }
 
 function formatDate(date: string) {

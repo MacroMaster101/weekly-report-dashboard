@@ -17,6 +17,8 @@ export async function GET() {
     return e as Response;
   }
 
+  // Admins see every account (they manage roles); managers only see the
+  // team members whose reports they review.
   const members = await prisma.user.findMany({
     where: session.user.role === "ADMIN" ? undefined : { role: "TEAM_MEMBER" },
     orderBy: { name: "asc" },
@@ -65,6 +67,9 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ error: "Member not found" }, { status: 404 });
     }
 
+    // Lockout guards: existing admins cannot be demoted (including by other
+    // admins), and an admin cannot strip their own role — so the system can
+    // never end up with zero admins.
     if (existing.role === "ADMIN" && role !== "ADMIN") {
       return NextResponse.json({ error: "Admin role changes are protected" }, { status: 400 });
     }

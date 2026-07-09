@@ -5,7 +5,7 @@ import { ThemeToggle } from "@/components/theme/ThemeToggle";
 
 export default function RegisterPage() {
   return (
-    <main className="flex flex-1 items-center justify-center p-6 relative overflow-hidden">
+    <main className="flex flex-1 items-center justify-center px-6 pb-6 pt-20 lg:p-6 relative overflow-hidden">
       {/* Floating Theme Switcher */}
       <div className="absolute top-6 right-6 z-20">
         <ThemeToggle />

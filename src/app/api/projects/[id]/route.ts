@@ -85,6 +85,8 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
   const existing = await prisma.project.findUnique({ where: { id }, select: { id: true } });
   if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
+  // Refuse to delete a project that reports reference — deleting it would
+  // orphan historical report data the dashboard still aggregates.
   const reportCount = await prisma.weeklyReport.count({ where: { projectId: id } });
   if (reportCount > 0) {
     return NextResponse.json(

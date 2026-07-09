@@ -3,11 +3,20 @@ import { prisma } from "@/lib/prisma";
 import { requireManager } from "@/lib/session";
 import type { Prisma } from "@prisma/client";
 
-const REPORT_STATUSES = ["DRAFT", "SUBMITTED", "LATE"] as const;
+// Manager-facing statuses. "PENDING" surfaces a member's unsubmitted DRAFT as
+// a metadata-only row (who / project / week) — the draft's content stays
+// private to its author and is redacted before the response leaves the server.
+const REPORT_STATUSES = ["SUBMITTED", "LATE", "PENDING"] as const;
 
 function parseDateParam(value: string, field: string): Date | NextResponse | null {
   if (!value) return null;
-  const date = new Date(value);
+  // Parse date-only values as local midnight, not UTC ("2026-06-29" via the
+  // Date constructor is UTC midnight, which shifts the boundary in timezones
+  // ahead of UTC and drops reports stored at local midnight).
+  const dateOnly = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  const date = dateOnly
+    ? new Date(Number(dateOnly[1]), Number(dateOnly[2]) - 1, Number(dateOnly[3]))
+    : new Date(value);
   if (Number.isNaN(date.getTime())) {
     return NextResponse.json({ error: `Invalid ${field}` }, { status: 400 });
   }
@@ -34,7 +43,8 @@ export async function GET(req: Request) {
     if (!REPORT_STATUSES.includes(status as (typeof REPORT_STATUSES)[number])) {
       return NextResponse.json({ error: "Invalid report status" }, { status: 400 });
     }
-    where.status = status as (typeof REPORT_STATUSES)[number];
+    // "PENDING" is the manager-facing name for a member's unsubmitted DRAFT.
+    where.status = status === "PENDING" ? "DRAFT" : (status as "SUBMITTED" | "LATE");
   }
 
   const parsedStart = startDate ? parseDateParam(startDate, "startDate") : null;
@@ -58,5 +68,21 @@ export async function GET(req: Request) {
     orderBy: { weekStartDate: "desc" },
     include: { user: { select: { id: true, name: true } }, project: { select: { id: true, name: true } } },
   });
-  return NextResponse.json({ reports });
+
+  // Redact drafts: managers see that a report is pending (row metadata only),
+  // never its work-in-progress content.
+  const sanitized = reports.map((report) =>
+    report.status === "DRAFT"
+      ? {
+          ...report,
+          status: "PENDING" as const,
+          tasksCompleted: "",
+          tasksPlanned: "",
+          blockers: null,
+          hoursWorked: null,
+          notes: null,
+        }
+      : report,
+  );
+  return NextResponse.json({ reports: sanitized });
 }

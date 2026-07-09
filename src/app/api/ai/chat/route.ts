@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireManager } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
-import { getWeekRange } from "@/lib/utils";
+import { getWeekRange, formatLocalDate } from "@/lib/utils";
 
 // Uses Groq via its OpenAI-compatible API. Get a key at
 // https://console.groq.com/keys and set GROQ_API_KEY in .env.
@@ -43,7 +43,6 @@ type ProjectSummary = {
 type Analytics = {
   weekLabel: string;
   submittedThisWeek: number;
-  draftThisWeek: number;
   lateThisWeek: number;
   pendingMembers: string[];
   blockers: string[];
@@ -51,10 +50,6 @@ type Analytics = {
   recentReports: string[];
   totalHours: number;
 };
-
-function formatDate(date: Date) {
-  return date.toISOString().slice(0, 10);
-}
 
 function compact(value: string, maxLength = 220) {
   const normalized = value.replace(/\s+/g, " ").trim();
@@ -91,14 +86,14 @@ function buildAnalytics(reports: ReportContext[], members: TeamMember[]): Analyt
     .slice(0, 12)
     .map(
       (report) =>
-        `${report.user.name} on ${report.project.name} (${formatDate(report.weekStartDate)}): ${compact(report.blockers ?? "")}`,
+        `${report.user.name} on ${report.project.name} (${formatLocalDate(report.weekStartDate)}): ${compact(report.blockers ?? "")}`,
     );
 
   const recentReports = reports.slice(0, 36).map(
     (report) =>
       [
         `${report.user.name} | ${report.project.name}`,
-        `${formatDate(report.weekStartDate)} to ${formatDate(report.weekEndDate)}`,
+        `${formatLocalDate(report.weekStartDate)} to ${formatLocalDate(report.weekEndDate)}`,
         `status:${report.status}`,
         `hours:${report.hoursWorked ?? "n/a"}`,
         `completed:${compact(report.tasksCompleted, 180)}`,
@@ -108,9 +103,8 @@ function buildAnalytics(reports: ReportContext[], members: TeamMember[]): Analyt
   );
 
   return {
-    weekLabel: `${formatDate(start)} to ${formatDate(end)}`,
+    weekLabel: `${formatLocalDate(start)} to ${formatLocalDate(end)}`,
     submittedThisWeek: currentWeekReports.filter((report) => report.status === "SUBMITTED").length,
-    draftThisWeek: currentWeekReports.filter((report) => report.status === "DRAFT").length,
     lateThisWeek: currentWeekReports.filter((report) => report.status === "LATE").length,
     pendingMembers: members
       .filter((member) => !submittedMemberIds.has(member.id))
@@ -128,7 +122,7 @@ function buildContext(analytics: Analytics, memberCount: number) {
   return [
     `Team members: ${memberCount}`,
     `Current week: ${analytics.weekLabel}`,
-    `Current week status: ${analytics.submittedThisWeek} submitted, ${analytics.lateThisWeek} late, ${analytics.draftThisWeek} drafts, ${analytics.pendingMembers.length} pending members.`,
+    `Current week status: ${analytics.submittedThisWeek} submitted, ${analytics.lateThisWeek} late, ${analytics.pendingMembers.length} pending members.`,
     `Pending members: ${analytics.pendingMembers.length ? analytics.pendingMembers.join(", ") : "none"}`,
     `Total tracked hours in supplied reports: ${analytics.totalHours}`,
     `Top project workload:\n${analytics.projectSummaries
@@ -163,7 +157,6 @@ function localAnswer(question: string, analytics: Analytics, memberCount: number
       `Current week (${analytics.weekLabel}) status:`,
       `- Submitted: ${analytics.submittedThisWeek}`,
       `- Late: ${analytics.lateThisWeek}`,
-      `- Draft: ${analytics.draftThisWeek}`,
       `- Pending members: ${analytics.pendingMembers.length ? analytics.pendingMembers.join(", ") : "none"}`,
     ].join("\n");
   }
@@ -171,7 +164,7 @@ function localAnswer(question: string, analytics: Analytics, memberCount: number
   return [
     `Team summary for ${analytics.weekLabel}:`,
     `- ${memberCount} team members are tracked.` ,
-    `- ${analytics.submittedThisWeek} submitted reports, ${analytics.lateThisWeek} late reports, and ${analytics.draftThisWeek} drafts this week.`,
+    `- ${analytics.submittedThisWeek} submitted reports and ${analytics.lateThisWeek} late reports this week.`,
     `- Top workload project: ${analytics.projectSummaries[0]?.project ?? "not available"}.`,
     `- Open/recent blockers: ${analytics.blockers.length}.`,
   ].join("\n");
@@ -198,7 +191,9 @@ export async function POST(req: Request) {
       select: { id: true, name: true },
     }),
     prisma.weeklyReport.findMany({
-      where: { user: { role: "TEAM_MEMBER" } },
+      // Drafts are private to their author — never fed to the assistant
+      // (or to the external LLM API) until submitted.
+      where: { user: { role: "TEAM_MEMBER" }, status: { in: ["SUBMITTED", "LATE"] } },
       orderBy: [{ weekStartDate: "desc" }, { updatedAt: "desc" }],
       take: 100,
       include: { user: { select: { id: true, name: true } }, project: { select: { name: true } } },
