@@ -236,6 +236,7 @@ The user turn is templated as `Question: <question>` followed by the compacted r
 
 | Deliverable | Link |
 | --- | --- |
-| **ER Diagram** (source) | [`docs/er-diagram.dbml`](docs/er-diagram.dbml) — import at [dbdiagram.io](https://dbdiagram.io) for the interactive diagram |
-| **Video Demo** | *[Add Google Drive link]* |
-| **Presentation Slides** | *[Add Google Slides link]* |
+| **GitHub Repository** | [github.com/MacroMaster101/weekly-report-dashboard](https://github.com/MacroMaster101/weekly-report-dashboard) |
+| **ER Diagram** | [View on Google Drive](https://drive.google.com/file/d/1gfjdz2Y40RZZx3JBHwDeA8u0509ateUn/view?usp=sharing) · source: [`docs/er-diagram.dbml`](docs/er-diagram.dbml) |
+| **Video Demo** | [Watch on Google Drive](https://drive.google.com/file/d/1Eyz1_fVWB-Cr8xyYfv5KXerL1sYok5UD/view?usp=sharing) |
+| **Presentation Slides** | [View on Google Slides](https://docs.google.com/presentation/d/1LKFZeBU-E9T3gX-ziaqwojrmLdDjla5Fc-x833wdHi0/edit?usp=sharing) |
